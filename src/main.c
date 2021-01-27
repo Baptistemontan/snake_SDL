@@ -78,11 +78,12 @@ int main(int argc, char const *argv[])
             score++;
             fprintf(stderr,"score : %d\n",score);
             createTarget(carte);
-        } else if(carte[head.x][head.y] & SNAKE_MASK || carte[head.x][head.y] == WALL){
-            continuerMain = SDL_FALSE;
-            break;
         } else {
             updateLastCoord(carte,&last);
+            if(carte[head.x][head.y] & SNAKE_MASK || carte[head.x][head.y] == WALL){
+                continuerMain = SDL_FALSE;
+                break;
+            }
         }
         carte[head.x][head.y] = SNAKE_MASK;
         SDL_FillRect(ecran,NULL,SDL_MapRGB(ecran->format,0,0,0));
