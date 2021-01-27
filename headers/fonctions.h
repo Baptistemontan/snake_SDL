@@ -11,7 +11,7 @@
     void updateLastCoord(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord *lastCoord);
     void loadLevel(int carte[NB_CASE_HEIGHT][NB_CASE_WIDTH], Coord* lastCoord, Coord* head, int* direction);
     void saveLevel(int carte[NB_CASE_HEIGHT][NB_CASE_WIDTH],Coord lastCoord, Coord head, int direction);
-    void blitSnake(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* ecran);
+    void renderSnake(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* ecran);
     void* waitEvent(void* arg);
 
 #endif

@@ -35,8 +35,8 @@
     typedef enum {
         VIDE           = 0x00,
         SNAKE_MASK     = 0x01,
-        TARGET_MASK    = 0x02,
-        WALL_MASK      = 0x04,
+        TARGET         = 0x02,
+        WALL           = 0x04,
         //             = 0x08,
         UP_MASK        = 0x10,
         DOWN_MASK      = 0x20,
@@ -58,7 +58,9 @@
         SNAKE_HEAD          = 0 * NB_BASESPRITE_WIDTH,
         SNAKE_TURN          = 3 * NB_BASESPRITE_WIDTH,
         SNAKE_END           = 4 * NB_BASESPRITE_WIDTH,
-        SNAKE_BODY          = 5 * NB_BASESPRITE_WIDTH
+        SNAKE_BODY          = 5 * NB_BASESPRITE_WIDTH,
+        SPRITE_WALL         = 22,
+        SPRITE_TARGET       = 23
     };
 
     typedef struct {

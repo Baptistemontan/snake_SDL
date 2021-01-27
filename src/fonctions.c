@@ -55,93 +55,92 @@ void newCoord(int direction, int* x, int* y) {
     }
 }
 
-void blitSnake(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* ecran) {
+void renderSnake(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* ecran) {
     static int head = 0;
-    SDL_FillRect(ecran,NULL,SDL_MapRGB(ecran->format,0,0,0));
     int lastDir,x = lastCoord.x,y = lastCoord.y;
     int currentCase = carte[x][y];
     SDL_Rect* currentSurface;
     SDL_bool continuer = SDL_TRUE;
     SDL_Rect coord;
     if(currentCase & UP_MASK) {
-        currentSurface = snakeCoord + SNAKE_END + UP;
+        currentSurface = spritesCoord + SNAKE_END + UP;
         lastDir = UP;
     } else if(currentCase & DOWN_MASK) {
-        currentSurface = snakeCoord + SNAKE_END + DOWN;
+        currentSurface = spritesCoord + SNAKE_END + DOWN;
         lastDir = DOWN;
     } else if(currentCase & LEFT_MASK) {
-        currentSurface = snakeCoord + SNAKE_END + LEFT;
+        currentSurface = spritesCoord + SNAKE_END + LEFT;
         lastDir = LEFT;
     } else if(currentCase & RIGHT_MASK) {
-        currentSurface = snakeCoord + SNAKE_END + RIGHT;
+        currentSurface = spritesCoord + SNAKE_END + RIGHT;
         lastDir = RIGHT;
     }
     coord.x = x * SPRITE_WIDTH;
     coord.y = y * SPRITE_WIDTH;
     newCoord(lastDir,&x,&y);
     currentCase = carte[x][y];
-    SDL_BlitSurface(snake,currentSurface,ecran,&coord);
+    SDL_BlitSurface(sprites,currentSurface,ecran,&coord);
     while(continuer) {
         if(currentCase & UP_MASK) {
             switch(lastDir) {
                 case UP:
-                    currentSurface = snakeCoord + SNAKE_BODY;
+                    currentSurface = spritesCoord + SNAKE_BODY;
                     break;
                 case LEFT:
-                    currentSurface = snakeCoord + SNAKE_TURN + UP + 1;
+                    currentSurface = spritesCoord + SNAKE_TURN + UP + 1;
                     break;
                 case RIGHT:
-                    currentSurface = snakeCoord + SNAKE_TURN + UP;
+                    currentSurface = spritesCoord + SNAKE_TURN + UP;
                     break;
             }
             lastDir = UP;
         } else if(currentCase & DOWN_MASK) {
             switch(lastDir) {
                 case DOWN:
-                    currentSurface = snakeCoord + SNAKE_BODY;
+                    currentSurface = spritesCoord + SNAKE_BODY;
                     break;
                 case LEFT:
-                    currentSurface = snakeCoord + SNAKE_TURN + 1;
+                    currentSurface = spritesCoord + SNAKE_TURN + 1;
                     break;
                 case RIGHT:
-                    currentSurface = snakeCoord + SNAKE_TURN;
+                    currentSurface = spritesCoord + SNAKE_TURN;
                     break;
             }
             lastDir = DOWN;
         } else if(currentCase & RIGHT_MASK) {
             switch(lastDir) {
                 case RIGHT:
-                    currentSurface = snakeCoord + SNAKE_BODY + 1;
+                    currentSurface = spritesCoord + SNAKE_BODY + 1;
                     break;
                 case DOWN:
-                    currentSurface = snakeCoord + SNAKE_TURN + 1 + UP;
+                    currentSurface = spritesCoord + SNAKE_TURN + 1 + UP;
                     break;
                 case UP:
-                    currentSurface = snakeCoord + SNAKE_TURN + 1;
+                    currentSurface = spritesCoord + SNAKE_TURN + 1;
                     break;
             }
             lastDir = RIGHT;
         } else if(currentCase & LEFT_MASK) {
             switch(lastDir) {
                 case LEFT:
-                    currentSurface = snakeCoord + SNAKE_BODY + 1;
+                    currentSurface = spritesCoord + SNAKE_BODY + 1;
                     break;
                 case DOWN:
-                    currentSurface = snakeCoord + SNAKE_TURN + UP;
+                    currentSurface = spritesCoord + SNAKE_TURN + UP;
                     break;
                 case UP:
-                    currentSurface = snakeCoord + SNAKE_TURN;
+                    currentSurface = spritesCoord + SNAKE_TURN;
                     break;
             }
             lastDir = LEFT;
         } else {
-            currentSurface = snakeCoord + SNAKE_HEAD + lastDir + head * NB_BASESPRITE_WIDTH;
+            currentSurface = spritesCoord + SNAKE_HEAD + lastDir + head * NB_BASESPRITE_WIDTH;
             head = (head + 1) % NB_HEAD;
             continuer = SDL_FALSE;
         }
         coord.x = x * SPRITE_WIDTH;
         coord.y = y * SPRITE_WIDTH;
-        SDL_BlitSurface(snake,currentSurface,ecran,&coord);
+        SDL_BlitSurface(sprites,currentSurface,ecran,&coord);
         newCoord(lastDir,&x,&y);
         currentCase = carte[x][y];
     } 
@@ -248,4 +247,33 @@ void* waitEvent(void* arg) {
         }
     }
     return NULL;
+}
+
+void createTarget(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT]) {
+    int x,y;
+    do {
+        x = rand() % NB_CASE_WIDTH;
+        y = rand() % NB_CASE_HEIGHT;
+    } while(carte[x][y] != 0);
+    carte[x][y] = TARGET;
+}
+
+void renderMap(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* ecran, SDL_Surface* sprites, SDL_Rect* spritesCoord) {
+    SDL_Rect pos;
+    for(int i = 0; i < NB_CASE_WIDTH;i++) {
+        for(int j = 0; j < NB_CASE_HEIGHT;j++) {
+            switch(carte[i][j]) {
+                case TARGET:
+                    pos.x = i * SPRITE_WIDTH;
+                    pos.y = j * SPRITE_HEIGHT;
+                    SDL_BlitSurface(sprites,spritesCoord + SPRITE_TARGET,ecran,&pos);
+                    break;
+                case WALL:
+                    pos.x = i * SPRITE_WIDTH;
+                    pos.y = j * SPRITE_HEIGHT;
+                    SDL_BlitSurface(sprites,spritesCoord + SPRITE_WALL,ecran,&pos);
+                    break;
+            }
+        }
+    }
 }

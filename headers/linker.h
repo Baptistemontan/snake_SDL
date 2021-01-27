@@ -7,6 +7,7 @@
     #include <stdio.h>
     #include <string.h>
     #include <pthread.h>
+    #include <time.h>
 
     #include "define.h"
     #include "fonctions.h"

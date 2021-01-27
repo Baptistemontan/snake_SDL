@@ -1,7 +1,5 @@
 #include "../headers/linker.h"
 
-#include <time.h>
-
 #define FRAMERATE 10
 
 // globals variables
@@ -11,12 +9,13 @@ pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
 int main(int argc, char const *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO);
+    srand(time(NULL));
 
     // initialisation des variables et chargement des surfaces
     SDL_Surface *ecran = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
     SDL_WM_SetCaption("SNAKE", NULL);
-    SDL_Surface* snake = loadSprite("snake.png");
-    SDL_Rect* snakeCoord = creatSnakeCoord();
+    SDL_Surface* sprites = loadSprite("snake.png");
+    SDL_Rect* spritesCoord = creatSnakeCoord();
     SDL_bool continuerMain = SDL_TRUE;
     int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT];
     Coord last, head;
@@ -74,7 +73,9 @@ int main(int argc, char const *argv[])
         updateLastCoord(carte,&last);
         newCoord(direction,&(head.x),&(head.y));
         carte[head.x][head.y] = SNAKE_MASK;
-        blitSnake(carte,last,snake,snakeCoord,ecran);
+        SDL_FillRect(ecran,NULL,SDL_MapRGB(ecran->format,0,0,0));
+        // renderMap();
+        renderSnake(carte,last,sprites,spritesCoord,ecran);
         SDL_Flip(ecran);
         // fprintf(stderr,"%d %d %d %d %d\n",last.x,last.y,head.x,head.y,direction);
         sleep(1000 / FRAMERATE);
@@ -87,8 +88,8 @@ int main(int argc, char const *argv[])
         // }
     }
     pthread_join(eventsThread,NULL);
-    free(snakeCoord);
-    SDL_FreeSurface(snake);
+    free(spritesCoord);
+    SDL_FreeSurface(sprites);
     SDL_Quit();
     return EXIT_SUCCESS;
 }
