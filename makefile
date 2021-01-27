@@ -16,7 +16,7 @@
 
 FOL = build
 CFOL = src
-EXEC = exec
+EXEC = snake
 CC = gcc
 CFLAGS=-O3 #Option d'optimisation du programme
 SDLFLAG = `sdl-config --cflags --libs`
