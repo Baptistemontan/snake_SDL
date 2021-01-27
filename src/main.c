@@ -1,25 +1,23 @@
 #include "../headers/linker.h"
 
+#include <time.h>
+
 #define FRAMERATE 10
 
+// globals variables
 char pathBuff[50];
-
 pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char const *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO);
 
-    // initialisation des variables et chargement
+    // initialisation des variables et chargement des surfaces
     SDL_Surface *ecran = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
     SDL_WM_SetCaption("SNAKE", NULL);
-
     SDL_Surface* snake = loadSprite("snake.png");
-
     SDL_Rect* snakeCoord = creatSnakeCoord();
-
     SDL_bool continuerMain = SDL_TRUE;
-
     int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT];
     Coord last, head;
     int direction, newDirection;
@@ -37,34 +35,28 @@ int main(int argc, char const *argv[])
     // head.y = 5;
     // direction = RIGHT;
     // saveLevel(carte,last,head,direction);
+
+    //chargement du niveau
     loadLevel(carte,&last,&head,&direction);
-    newDirection = direction;
-    // fprintf(stderr,"last: %d %d\nhead: %d %d\ndirection: %d\n",last.x,last.y,head.x,head.y,direction);
-    // for(int i = 0; i < NB_CASE_HEIGHT;i++) {
-    //     for(int j = 0; j < NB_CASE_WIDTH;j++) {
-    //         fprintf(stderr,"%d ",carte[j][i]);
-    //     }
-    //     fprintf(stderr,"\n");
-    // }
+    newDirection = direction;    
 
-    // blitSnake(carte,last,snake,snakeCoord,ecran);
-    
-    // SDL_Flip(ecran);
-
-
-    
-
-    void** eventsThreadArgs = malloc(sizeof(void*) * 3);
+    // creation of a seperate thread for event handling
+    void** eventsThreadArgs = malloc(sizeof(void*) * 3); // free directly in the function
     eventsThreadArgs[0] = &continuerMain;
     eventsThreadArgs[1] = &direction;
     eventsThreadArgs[2] = &newDirection;
     pthread_t eventsThread;
     pthread_create(&eventsThread,NULL,waitEvent,eventsThreadArgs);
 
+    // struct timespec time, newTime;
+    // clock_gettime(0,&time);
+    // int frame = 0;
+
 
     while(continuerMain) {
         pthread_mutex_lock(&directionMutex);
         direction = newDirection;
+        pthread_mutex_unlock(&directionMutex);
         switch(direction) {
             case UP:
                 carte[head.x][head.y] = SNAKE_MASK | UP_MASK;
@@ -81,12 +73,18 @@ int main(int argc, char const *argv[])
         }
         updateLastCoord(carte,&last);
         newCoord(direction,&(head.x),&(head.y));
-        pthread_mutex_unlock(&directionMutex);
         carte[head.x][head.y] = SNAKE_MASK;
         blitSnake(carte,last,snake,snakeCoord,ecran);
         SDL_Flip(ecran);
         // fprintf(stderr,"%d %d %d %d %d\n",last.x,last.y,head.x,head.y,direction);
         sleep(1000 / FRAMERATE);
+        // frame++;
+        // clock_gettime(0,&newTime);
+        // if(time.tv_sec + 1 <= newTime.tv_sec) {
+        //     fprintf(stderr,"%d\n",frame);
+        //     frame = 0;
+        //     time = newTime;
+        // }
     }
     pthread_join(eventsThread,NULL);
     free(snakeCoord);
