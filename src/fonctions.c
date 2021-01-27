@@ -214,6 +214,7 @@ void* waitEvent(void* arg) {
     SDL_bool* continuerMain = ((void**)arg)[0];
     int* direction = ((void**)arg)[1];
     int* newDirection = ((void**)arg)[2];
+    free(arg);
     while(*continuerMain) {
         SDL_WaitEvent(&event);
         switch (event.type) {

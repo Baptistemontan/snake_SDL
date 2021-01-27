@@ -89,7 +89,6 @@ int main(int argc, char const *argv[])
         sleep(1000 / FRAMERATE);
     }
     pthread_join(eventsThread,NULL);
-    free(eventsThreadArgs);
     free(snakeCoord);
     SDL_FreeSurface(snake);
     SDL_Quit();
