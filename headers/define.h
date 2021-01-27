@@ -3,23 +3,23 @@
 
     #include "linker.h"
 
-    #define SPRITE_WIDTH 40
-    #define SPRITE_HEIGHT 40
-    #define BASESPRITE_WIDTH 126
-    #define BASESPRITE_HEIGHT 126
-    #define NB_BASESPRITE_WIDTH 4
-    #define NB_BASESPRITE_HEIGHT 6
-    #define NB_SPRITE NB_BASESPRITE_HEIGHT * NB_BASESPRITE_WIDTH
-    #define NB_CASE_WIDTH 12
-    #define NB_CASE_HEIGHT 12
-    #define WINDOW_WIDTH SPRITE_WIDTH * NB_CASE_WIDTH
-    #define WINDOW_HEIGHT SPRITE_HEIGHT * NB_CASE_HEIGHT
-    #define SPRITESPATH "sprites/%s"
-    #define ASCII_OFFSET '!'
-    #define SAVEFILENAME "carte.lvl"
-    #define SAVEFILEPATH "./%s"
+    #define SPRITE_WIDTH 40 // width of a sprite bloc in pxl
+    #define SPRITE_HEIGHT 40 // height of a sprite bloc in pxl
+    #define NB_BASESPRITE_WIDTH 4 // nb of sprite in a row of the base sprite image
+    #define NB_BASESPRITE_HEIGHT 6 // nb of spritein a coll of the base sprite image
+    #define NB_SPRITES NB_BASESPRITE_HEIGHT * NB_BASESPRITE_WIDTH // total number of sprites
+    #define NB_CASE_WIDTH 12 // NB of case in a row of the window
+    #define NB_CASE_HEIGHT 12 // NB of case in a col of the window
+    #define WINDOW_WIDTH SPRITE_WIDTH * NB_CASE_WIDTH // window width in pxl
+    #define WINDOW_HEIGHT SPRITE_HEIGHT * NB_CASE_HEIGHT // window height in pxl
+    #define MAX_PATH_LENGTH 100 // max size of the path buffer
+    #define SPRITESPATH "sprites/%s" // path to the sprites folder
+    #define ASCII_OFFSET '!' // ascii offset, can be 0 but the lvl file will be hard to modifie by hand
+    #define SAVEFILENAME "map.lvl" // name of the lvl save map
+    #define SAVEFILEPATH "./saves/%s" // path to the save folder
 
 
+    // sleep fonc macro
     #ifdef __unix__
     #include <unistd.h>
     #define sleep(ms) usleep(ms * 1000)
@@ -28,12 +28,13 @@
     #define sleep(ms) Sleep(ms)
     #endif
 
-    extern char pathBuff[];
+    // mutex for the direction variable
     extern pthread_mutex_t directionMutex;
 
     
-    typedef enum {
-        VIDE           = 0x00,
+    // enum of the map elements
+    enum {
+        EMPTY          = 0x00,
         SNAKE_MASK     = 0x01,
         TARGET         = 0x02,
         WALL           = 0x04,
@@ -42,18 +43,19 @@
         DOWN_MASK      = 0x20,
         RIGHT_MASK     = 0x40,
         LEFT_MASK      = 0x80
-    } CASE;
-
+    };
+    // enum of direction
     enum {
         DOWN    = 0,
         LEFT    = 1,
         UP      = 2,
-        RIGHT   = 3,
-        QUIT
+        RIGHT   = 3
     };
 
+    // nb of different head pattern
     #define NB_HEAD 3
 
+    // sprite coord offset of every snake element
     enum {
         SNAKE_HEAD          = 0 * NB_BASESPRITE_WIDTH,
         SNAKE_TURN          = 3 * NB_BASESPRITE_WIDTH,
@@ -63,6 +65,7 @@
         SPRITE_WALL         = 23
     };
 
+    // store coords
     typedef struct {
         int x, y;
     } Coord;

@@ -8,12 +8,12 @@
     void checkSurface(SDL_Surface* surface);
     SDL_Rect* creatSnakeCoord();
     void newCoord(int direction, int* x, int* y);
-    void updateLastCoord(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord *lastCoord);
-    void loadLevel(int carte[NB_CASE_HEIGHT][NB_CASE_WIDTH], Coord* lastCoord, Coord* head, int* direction);
-    void saveLevel(int carte[NB_CASE_HEIGHT][NB_CASE_WIDTH],Coord lastCoord, Coord head, int direction);
-    void renderSnake(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* ecran);
+    void updateLastCoord(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord *lastCoord);
+    void loadLevel(int map[NB_CASE_HEIGHT][NB_CASE_WIDTH], Coord* lastCoord, Coord* head, int* direction);
+    void saveLevel(int map[NB_CASE_HEIGHT][NB_CASE_WIDTH],Coord lastCoord, Coord head, int direction);
+    void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* screen);
     void* waitEvent(void* arg);
-    void createTarget(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT]);
-    void renderMap(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* ecran, SDL_Surface* sprites, SDL_Rect* spritesCoord);
+    void createTarget(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT]);
+    void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord);
 
 #endif

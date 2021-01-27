@@ -3,40 +3,46 @@
 #define FRAMERATE 10
 
 // globals variables
-char pathBuff[50];
 pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char const *argv[])
 {
+    // SDL initialisation
     SDL_Init(SDL_INIT_VIDEO);
+
+    // rand functions init
     srand(time(NULL));
 
-    // initialisation des variables et chargement des surfaces
-    SDL_Surface *ecran = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    // variable init and surfaces loading
+    SDL_Surface *screen = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    SDL_Surface* sprites = loadSprite("snake.png"); // load all the sprites at once
+    SDL_Rect* spritesCoord = creatSnakeCoord(); // create Rect for every sprite in the surface sprites
+    SDL_bool continuerMain = SDL_TRUE; // loop as long as true
+    int map[NB_CASE_WIDTH][NB_CASE_HEIGHT];
+    Coord last, head; // store the coord of the head and the end of the snake
+    int direction, newDirection; // current direction, newDirection is modified by the event thread
+    
+    // window caption
     SDL_WM_SetCaption("SNAKE", NULL);
-    SDL_Surface* sprites = loadSprite("snake.png");
-    SDL_Rect* spritesCoord = creatSnakeCoord();
-    SDL_bool continuerMain = SDL_TRUE;
-    int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT];
-    Coord last, head;
-    int direction, newDirection;
+
+    // level creation
     // for(int i = 0; i < NB_CASE_HEIGHT;i++) {
     //     for(int j = 0; j < NB_CASE_WIDTH;j++) {
-    //         carte[j][i] = VIDE;
+    //         map[j][i] = EMPTY;
     //     }
     // }
     // last.x = 3;
     // last.y = 6;
-    // carte[3][6] = SNAKE_MASK | UP_MASK;
-    // carte[3][5] = SNAKE_MASK | RIGHT_MASK;
-    // carte[4][5] = SNAKE_MASK;
+    // map[3][6] = SNAKE_MASK | UP_MASK;
+    // map[3][5] = SNAKE_MASK | RIGHT_MASK;
+    // map[4][5] = SNAKE_MASK;
     // head.x = 4;
     // head.y = 5;
     // direction = RIGHT;
-    // saveLevel(carte,last,head,direction);
+    // saveLevel(map,last,head,direction);
 
     //chargement du niveau
-    loadLevel(carte,&last,&head,&direction);
+    loadLevel(map,&last,&head,&direction);
     newDirection = direction;    
 
     // creation of a seperate thread for event handling
@@ -47,51 +53,67 @@ int main(int argc, char const *argv[])
     pthread_t eventsThread;
     pthread_create(&eventsThread,NULL,waitEvent,eventsThreadArgs);
 
+
+    // basic framerate counter part 1/2
     // struct timespec time, newTime;
     // clock_gettime(0,&time);
     // int frame = 0;
 
-    createTarget(carte);
+    // target and score creation
+    createTarget(map);
     int score = 0;
 
 
     while(continuerMain) {
+        // update direction from the event thread
         pthread_mutex_lock(&directionMutex);
         direction = newDirection;
         pthread_mutex_unlock(&directionMutex);
+        // update the map according to the direction
         switch(direction) {
             case UP:
-                carte[head.x][head.y] = SNAKE_MASK | UP_MASK;
+                map[head.x][head.y] = SNAKE_MASK | UP_MASK;
                 break;
             case DOWN:
-                carte[head.x][head.y] = SNAKE_MASK | DOWN_MASK;
+                map[head.x][head.y] = SNAKE_MASK | DOWN_MASK;
                 break;
             case LEFT:
-                carte[head.x][head.y] = SNAKE_MASK | LEFT_MASK;
+                map[head.x][head.y] = SNAKE_MASK | LEFT_MASK;
                 break;
             case RIGHT:
-                carte[head.x][head.y] = SNAKE_MASK | RIGHT_MASK;
+                map[head.x][head.y] = SNAKE_MASK | RIGHT_MASK;
                 break;
         }
+        // move the head according to the direction
         newCoord(direction,&(head.x),&(head.y));
-        if(carte[head.x][head.y] == TARGET) {
+        if(map[head.x][head.y] == TARGET) {
+            // score incrementation when fruit is eaten
             score++;
             fprintf(stderr,"score : %d\n",score);
-            createTarget(carte);
+            createTarget(map);
         } else {
-            updateLastCoord(carte,&last);
-            if(carte[head.x][head.y] & SNAKE_MASK || carte[head.x][head.y] == WALL){
+            // move the end of the snake
+            updateLastCoord(map,&last);
+            // collision checks
+            if(map[head.x][head.y] & SNAKE_MASK || map[head.x][head.y] == WALL){
                 continuerMain = SDL_FALSE;
                 break;
             }
         }
-        carte[head.x][head.y] = SNAKE_MASK;
-        SDL_FillRect(ecran,NULL,SDL_MapRGB(ecran->format,0,0,0));
-        renderMap(carte,ecran,sprites,spritesCoord);
-        renderSnake(carte,last,sprites,spritesCoord,ecran);
-        SDL_Flip(ecran);
-        // fprintf(stderr,"%d %d %d %d %d\n",last.x,last.y,head.x,head.y,direction);
+        // map update
+        map[head.x][head.y] = SNAKE_MASK;
+        // screen reset
+        SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
+        // re-render map elements
+        renderMap(map,screen,sprites,spritesCoord);
+        // re-render the snake
+        renderSnake(map,last,sprites,spritesCoord,screen);
+        // display the screen
+        SDL_Flip(screen);
+        // cap the framerate
         sleep(1000 / FRAMERATE);
+
+        // basic framerate counter part 2/2
         // frame++;
         // clock_gettime(0,&newTime);
         // if(time.tv_sec + 1 <= newTime.tv_sec) {
@@ -100,9 +122,12 @@ int main(int argc, char const *argv[])
         //     time = newTime;
         // }
     }
+    // force termination of the event thread
     pthread_cancel(eventsThread);
+    // variable freeing
     free(spritesCoord);
     SDL_FreeSurface(sprites);
+    // end of programme
     SDL_Quit();
     return EXIT_SUCCESS;
 }
