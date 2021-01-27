@@ -51,6 +51,9 @@ int main(int argc, char const *argv[])
     // clock_gettime(0,&time);
     // int frame = 0;
 
+    createTarget(carte);
+    int score = 0;
+
 
     while(continuerMain) {
         pthread_mutex_lock(&directionMutex);
@@ -70,11 +73,20 @@ int main(int argc, char const *argv[])
                 carte[head.x][head.y] = SNAKE_MASK | RIGHT_MASK;
                 break;
         }
-        updateLastCoord(carte,&last);
         newCoord(direction,&(head.x),&(head.y));
+        if(carte[head.x][head.y] == TARGET) {
+            score++;
+            fprintf(stderr,"score : %d\n",score);
+            createTarget(carte);
+        } else if(carte[head.x][head.y] & SNAKE_MASK || carte[head.x][head.y] == WALL){
+            continuerMain = SDL_FALSE;
+            break;
+        } else {
+            updateLastCoord(carte,&last);
+        }
         carte[head.x][head.y] = SNAKE_MASK;
         SDL_FillRect(ecran,NULL,SDL_MapRGB(ecran->format,0,0,0));
-        // renderMap();
+        renderMap(carte,ecran,sprites,spritesCoord);
         renderSnake(carte,last,sprites,spritesCoord,ecran);
         SDL_Flip(ecran);
         // fprintf(stderr,"%d %d %d %d %d\n",last.x,last.y,head.x,head.y,direction);
@@ -87,7 +99,7 @@ int main(int argc, char const *argv[])
         //     time = newTime;
         // }
     }
-    pthread_join(eventsThread,NULL);
+    pthread_cancel(eventsThread);
     free(spritesCoord);
     SDL_FreeSurface(sprites);
     SDL_Quit();

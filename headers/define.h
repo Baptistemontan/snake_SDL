@@ -59,8 +59,8 @@
         SNAKE_TURN          = 3 * NB_BASESPRITE_WIDTH,
         SNAKE_END           = 4 * NB_BASESPRITE_WIDTH,
         SNAKE_BODY          = 5 * NB_BASESPRITE_WIDTH,
-        SPRITE_WALL         = 22,
-        SPRITE_TARGET       = 23
+        SPRITE_TARGET       = 22,
+        SPRITE_WALL         = 23
     };
 
     typedef struct {

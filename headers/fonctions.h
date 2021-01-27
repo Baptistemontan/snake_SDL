@@ -13,5 +13,7 @@
     void saveLevel(int carte[NB_CASE_HEIGHT][NB_CASE_WIDTH],Coord lastCoord, Coord head, int direction);
     void renderSnake(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* ecran);
     void* waitEvent(void* arg);
+    void createTarget(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT]);
+    void renderMap(int carte[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* ecran, SDL_Surface* sprites, SDL_Rect* spritesCoord);
 
 #endif
