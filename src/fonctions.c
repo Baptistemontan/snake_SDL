@@ -327,3 +327,21 @@ void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_
         }
     }
 }
+
+// stop the process until a key is pressed or the exit cross clicked
+// return true is the exit cross is pressed, false for an keypress
+SDL_bool pauseGame() {
+    fprintf(stderr,"press a key or click the red cross to exit\n");
+    SDL_Event event;
+    while(1) {
+        SDL_WaitEvent(&event);
+        switch(event.type) {
+            case SDL_QUIT:
+                return SDL_TRUE;
+                break;
+            case SDL_KEYDOWN:
+                return SDL_FALSE;
+                break;
+        }
+    }
+}

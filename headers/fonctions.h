@@ -15,5 +15,6 @@
     void* waitEvent(void* arg);
     void createTarget(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT]);
     void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord);
+    SDL_bool pauseGame();
 
 #endif

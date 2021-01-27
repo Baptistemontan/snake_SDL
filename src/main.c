@@ -43,7 +43,12 @@ int main(int argc, char const *argv[])
 
     //chargement du niveau
     loadLevel(map,&last,&head,&direction);
-    newDirection = direction;    
+    newDirection = direction;
+
+
+    // enable key press repeating
+    // make the input more responsive when switching direction rapidly
+    SDL_EnableKeyRepeat(50, 50);
 
     // creation of a seperate thread for event handling
     void** eventsThreadArgs = malloc(sizeof(void*) * 3); // free directly in the function
@@ -96,7 +101,8 @@ int main(int argc, char const *argv[])
             updateLastCoord(map,&last);
             // collision checks
             if(map[head.x][head.y] & SNAKE_MASK || map[head.x][head.y] == WALL){
-                continuerMain = SDL_FALSE;
+                // pauseGame();
+                continuerMain = SDL_FALSE; // exiting main loop
                 break;
             }
         }
@@ -110,7 +116,7 @@ int main(int argc, char const *argv[])
         renderSnake(map,last,sprites,spritesCoord,screen);
         // display the screen
         SDL_Flip(screen);
-        // cap the framerate
+        // force cap the framerate
         sleep(1000 / FRAMERATE);
 
         // basic framerate counter part 2/2
