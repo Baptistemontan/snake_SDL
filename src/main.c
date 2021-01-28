@@ -1,7 +1,7 @@
 #include "../headers/linker.h"
 
 #define FRAMERATE 10 // max framerate | default : 10 | disabled if set to 0 or commented
-// #define FRAMECOUNTER // while output framerate if defined
+// #define FRAMECOUNTER // output framerate if defined
 
 // globals variables
 pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;

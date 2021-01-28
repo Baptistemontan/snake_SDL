@@ -65,8 +65,6 @@ void newCoord(int direction, int* x, int* y) {
 
 // render the snake according to the map
 void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* screen) {
-    // we have 3 sets of head, this variable is increment every render
-    static int head = 0;
     // variable declaration
     int lastDir,x = lastCoord.x,y = lastCoord.y;
     int currentCase = map[x][y];
@@ -153,8 +151,7 @@ void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Sur
             lastDir = LEFT;
         } else {
             // head in this case
-            currentSurface = spritesCoord + SNAKE_HEAD + lastDir + head * NB_BASESPRITE_WIDTH;
-            head = (head + 1) % NB_HEAD;
+            currentSurface = spritesCoord + SNAKE_HEAD + lastDir;
             continuer = SDL_FALSE; // loop exit
         }
         coord.x = x * SPRITE_WIDTH;
