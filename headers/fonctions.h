@@ -9,8 +9,9 @@
     SDL_Rect* creatSnakeCoord();
     void newCoord(int direction, int* x, int* y);
     void updateLastCoord(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord *lastCoord);
-    void loadLevel(int map[NB_CASE_HEIGHT][NB_CASE_WIDTH], Coord* lastCoord, Coord* head, int* direction);
+    SDL_bool loadLevel(int map[NB_CASE_HEIGHT][NB_CASE_WIDTH], Coord* lastCoord, Coord* head, int* direction);
     void saveLevel(int map[NB_CASE_HEIGHT][NB_CASE_WIDTH],Coord lastCoord, Coord head, int direction);
+    SDL_bool defaultLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* head, int* direction);
     void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* snake, SDL_Rect* snakeCoord, SDL_Surface* screen);
     void* waitEvent(void* arg);
     void createTarget(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT]);

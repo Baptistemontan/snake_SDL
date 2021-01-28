@@ -8,8 +8,8 @@
     #define NB_BASESPRITE_WIDTH 4 // nb of sprite in a row of the base sprite image
     #define NB_BASESPRITE_HEIGHT 6 // nb of spritein a coll of the base sprite image
     #define NB_SPRITES NB_BASESPRITE_HEIGHT * NB_BASESPRITE_WIDTH // total number of sprites
-    #define NB_CASE_WIDTH 12 // NB of case in a row of the window
-    #define NB_CASE_HEIGHT 12 // NB of case in a col of the window
+    #define NB_CASE_WIDTH 13 // NB of case in a row of the window | min 3
+    #define NB_CASE_HEIGHT 13 // NB of case in a col of the window | min 3
     #define WINDOW_WIDTH SPRITE_WIDTH * NB_CASE_WIDTH // window width in pxl
     #define WINDOW_HEIGHT SPRITE_HEIGHT * NB_CASE_HEIGHT // window height in pxl
     #define MAX_PATH_LENGTH 100 // max size of the path buffer

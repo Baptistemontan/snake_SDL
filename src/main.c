@@ -1,6 +1,7 @@
 #include "../headers/linker.h"
 
-#define FRAMERATE 10
+#define FRAMERATE 10 // max framerate | default : 10 | disabled if set to 0 or commented
+// #define FRAMECOUNTER // while output framerate if defined
 
 // globals variables
 pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -35,24 +36,13 @@ int main(int argc, char const *argv[])
     // window caption
     SDL_WM_SetCaption("SNAKE", NULL);
 
-    // level creation
-    // for(int i = 0; i < NB_CASE_HEIGHT;i++) {
-    //     for(int j = 0; j < NB_CASE_WIDTH;j++) {
-    //         map[j][i] = EMPTY;
-    //     }
-    // }
-    // last.x = 3;
-    // last.y = 6;
-    // map[3][6] = SNAKE_MASK | UP_MASK;
-    // map[3][5] = SNAKE_MASK | RIGHT_MASK;
-    // map[4][5] = SNAKE_MASK;
-    // head.x = 4;
-    // head.y = 5;
-    // direction = RIGHT;
-    // saveLevel(map,last,head,direction);
-
     //chargement du niveau
-    loadLevel(map,&last,&head,&direction);
+    if(loadLevel(map,&last,&head,&direction) == SDL_FALSE) {
+        if(defaultLevel(map,&last,&head,&direction) == SDL_FALSE){
+            fprintf(stderr,"board size too small.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
     newDirection = direction;
 
 
@@ -68,10 +58,14 @@ int main(int argc, char const *argv[])
     pthread_t eventsThread;
     pthread_create(&eventsThread,NULL,waitEvent,eventsThreadArgs);
 
-
+    #ifdef FRAMECOUNTER
     // basic framerate counter part 1/2
-    // Uint32 oldTime = SDL_GetTicks(), newTime;
-    // uint frame = 0;
+    Uint32 oldTime = SDL_GetTicks(), newTime;
+    uint frame = 0;
+
+    unsigned long totalFrame = 0;
+    uint nbReset = 0;
+    #endif
 
     // target and score creation
     createTarget(map);
@@ -127,17 +121,25 @@ int main(int argc, char const *argv[])
         // display the screen
         SDL_Flip(screen);
         // force cap the framerate
+        #if FRAMERATE != 0
         SDL_Delay(1000 / FRAMERATE);
-
+        #endif
         // basic framerate counter part 2/2
-        // frame++;
-        // newTime = SDL_GetTicks();
-        // if(newTime - oldTime >= 1000) {
-        //     oldTime = newTime;
-        //     fprintf(stderr,"%d\n",frame);
-        //     frame = 0;
-        // }
+        #ifdef FRAMECOUNTER
+        frame++;
+        newTime = SDL_GetTicks();
+        if(newTime - oldTime >= 1000) {
+            oldTime = newTime;
+            fprintf(stderr,"framerate : %d\n",frame);
+            totalFrame += frame;
+            nbReset++;
+            frame = 0;
+        }
+        #endif
     }
+    #ifdef FRAMECOUNTER
+    fprintf(stderr,"average framerate : %lu\n", totalFrame / nbReset);
+    #endif
     // force termination of the event thread
     pthread_cancel(eventsThread);
     // variable freeing

@@ -168,16 +168,26 @@ void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Sur
 }
 
 // load the level
-void loadLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* head, int* direction) {
+SDL_bool loadLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* head, int* direction) {
     char pathBuff[MAX_PATH_LENGTH];
     // save file loading
     FILE* file = fopen(editPath(SAVEFILEPATH,SAVEFILENAME,pathBuff),"r");
     // check for error
     if(file == NULL) {
-        fprintf(stderr,"erreur ouverture %s",pathBuff);
-        exit(EXIT_FAILURE);
+        fprintf(stderr,"erreur ouverture %s, using default level.\n",pathBuff);
+        return SDL_FALSE;
     }
-    // first 2 char are end of snake coord
+    fprintf(stderr,"loading saved level ...\n");
+    // first 2 char are the map dimension
+    int width = fgetc(file) - ASCII_OFFSET;
+    int height = fgetc(file) - ASCII_OFFSET;
+    if(width != NB_CASE_WIDTH || height != NB_CASE_HEIGHT) {
+        fprintf(stderr,"save file dimension are not compatible : %d x %d required.\n",width,height);
+        fprintf(stderr,"using default level.\n");
+        fclose(file);
+        return SDL_FALSE;
+    }
+    // next 2 char are end of snake coord
     lastCoord->x = fgetc(file) - ASCII_OFFSET;
     lastCoord->y = fgetc(file) - ASCII_OFFSET;
     // next 2 are head coord
@@ -196,6 +206,7 @@ void loadLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* h
         }
     }
     fclose(file);
+    return SDL_TRUE;
 }
 
 // save the level
@@ -209,7 +220,10 @@ void saveLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], Coord lastCoord, Coord he
         fprintf(stderr,"erreur ouverture %s",SAVEFILENAME);
         exit(EXIT_FAILURE);
     }
+    fprintf(stderr,"saving level...\n");
     // char order is same as loadLevel
+    fputc(NB_CASE_WIDTH + ASCII_OFFSET,file);
+    fputc(NB_CASE_HEIGHT + ASCII_OFFSET,file);
     fputc(lastCoord.x + ASCII_OFFSET,file);
     fputc(lastCoord.y + ASCII_OFFSET,file);
     fputc(head.x + ASCII_OFFSET,file);
@@ -344,4 +358,26 @@ SDL_bool pauseGame() {
                 break;
         }
     }
+}
+
+SDL_bool defaultLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* head, int* direction) {
+    if(NB_CASE_HEIGHT < 3 || NB_BASESPRITE_WIDTH < 3){
+        return SDL_FALSE;
+    }
+    fprintf(stderr,"creating default level...\n");
+    for(int i = 0; i < NB_CASE_WIDTH;i++) {
+        for(int j = 0; j < NB_CASE_HEIGHT; j++) {
+            map[i][j] = EMPTY;
+        }
+    }
+    Coord middle = {.x = NB_CASE_WIDTH / 2, .y = NB_BASESPRITE_HEIGHT / 2};
+    lastCoord->x = middle.x;
+    lastCoord->y = middle.y + 1;
+    head->x = middle.x;
+    head->y = middle.y - 1;
+    *direction = UP;
+    map[lastCoord->x][lastCoord->y] = SNAKE_MASK | UP_MASK;
+    map[middle.x][middle.y] = SNAKE_MASK | UP_MASK;
+    map[head->x][head->y] = SNAKE_MASK;
+    return SDL_TRUE;
 }
