@@ -25,7 +25,7 @@ SDL_Surface* loadSprite(char* name, SDL_bool check) {
 
 // return an array of Rect going from left to right, up to down, of every sprite of a given size in a given space
 // array is malloced
-SDL_Rect* creatSnakeCoord() {
+SDL_Rect* createSnakeCoord() {
     SDL_Rect *spritesCoord = malloc(sizeof(SDL_Rect) * NB_SPRITES);
     int k = 0;
     for(int i = 0;i < NB_BASESPRITE_HEIGHT; i++) {
@@ -64,6 +64,7 @@ void newCoord(int direction, int* x, int* y) {
 }
 
 // render the snake according to the map
+// deprecated
 void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* screen) {
     // variable declaration
     int lastDir,x = lastCoord.x,y = lastCoord.y;
@@ -309,13 +310,15 @@ void* waitEvent(void* arg) {
 }
 
 // pick a random empty location and put the target in
-void createTarget(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT]) {
+void createTarget(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],SDL_Surface* screen,SDL_Surface* sprites, SDL_Rect* spritesCoord) {
     int x,y;
     do {
         x = rand() % NB_CASE_WIDTH;
         y = rand() % NB_CASE_HEIGHT;
     } while(map[x][y] != 0);
     map[x][y] = TARGET;
+    SDL_Rect pos = {.x = x * SPRITE_WIDTH, .y = y * SPRITE_HEIGHT};
+    SDL_BlitSurface(sprites,spritesCoord + SPRITE_TARGET,screen,&pos);
 }
 
 // take a map and render every element other than the snake
@@ -324,11 +327,6 @@ void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_
     for(int i = 0; i < NB_CASE_WIDTH;i++) {
         for(int j = 0; j < NB_CASE_HEIGHT;j++) {
             switch(map[i][j]) {
-                case TARGET:
-                    pos.x = i * SPRITE_WIDTH;
-                    pos.y = j * SPRITE_HEIGHT;
-                    SDL_BlitSurface(sprites,spritesCoord + SPRITE_TARGET,screen,&pos);
-                    break;
                 case WALL:
                     pos.x = i * SPRITE_WIDTH;
                     pos.y = j * SPRITE_HEIGHT;
@@ -337,6 +335,107 @@ void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_
             }
         }
     }
+}
+
+void renderSnakeEnd(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* background, Coord* lastCoord) {
+    SDL_Rect pos ={.w = SPRITE_WIDTH, .h = SPRITE_HEIGHT,.x = lastCoord->x * SPRITE_WIDTH, .y = lastCoord->y * SPRITE_HEIGHT};
+    SDL_BlitSurface(background,&pos,screen,&pos);
+    updateLastCoord(map,lastCoord);
+    SDL_Rect* newPos;
+    if(map[lastCoord->x][lastCoord->y] & UP_MASK) {
+        newPos = spritesCoord + SNAKE_END + UP;
+    } else if(map[lastCoord->x][lastCoord->y] & DOWN_MASK) {
+        newPos = spritesCoord + SNAKE_END + DOWN;
+    } else if(map[lastCoord->x][lastCoord->y] & LEFT_MASK) {
+        newPos = spritesCoord + SNAKE_END + LEFT;
+    } else { // RIGHT
+        newPos = spritesCoord + SNAKE_END + RIGHT;
+    }
+    pos.x = lastCoord->x * SPRITE_WIDTH;
+    pos.y = lastCoord->y * SPRITE_HEIGHT;
+    SDL_BlitSurface(background,&pos,screen,&pos);
+    SDL_BlitSurface(sprites,newPos,screen,&pos);
+}
+
+void renderSnakeHead(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* background, Coord lastCoord, Coord headCoord) {
+    Coord last, next = lastCoord;
+    int direction, lastDir;
+    while(next.x != headCoord.x || next.y != headCoord.y) {
+        last = next;
+        lastDir = direction;
+        if(map[last.x][last.y] & UP_MASK) {
+            direction = UP;
+        } else if(map[last.x][last.y] & DOWN_MASK) {
+            direction = DOWN;
+        } else if(map[last.x][last.y] & LEFT_MASK) {
+            direction = LEFT;
+        } else { // RIGHT
+            direction = RIGHT;
+        }
+        newCoord(direction,&(next.x),&(next.y));
+    }
+    SDL_Rect* currentSprite;
+    switch(lastDir) {
+        case UP:
+            switch(direction) {
+                case UP:
+                    currentSprite = spritesCoord + SNAKE_BODY;
+                    break;
+                case LEFT:
+                    currentSprite = spritesCoord + SNAKE_TURN;
+                    break;
+                case RIGHT:
+                    currentSprite = spritesCoord + SNAKE_TURN + 1;
+                    break;
+            }
+            break;
+        case DOWN:
+            switch(direction) {
+                case DOWN:
+                    currentSprite = spritesCoord + SNAKE_BODY;
+                    break;
+                case LEFT:
+                    currentSprite = spritesCoord + SNAKE_TURN + UP;
+                    break;
+                case RIGHT:
+                    currentSprite = spritesCoord + SNAKE_TURN + UP + 1;
+                    break;
+            }
+            break;
+        case RIGHT:
+            switch(direction) {
+                case RIGHT:
+                    currentSprite = spritesCoord + SNAKE_BODY + 1;
+                    break;
+                case UP:
+                    currentSprite = spritesCoord + SNAKE_TURN + UP;
+                    break;
+                case DOWN:
+                    currentSprite = spritesCoord + SNAKE_TURN;
+                    break;
+            }
+            break;
+        case LEFT:
+            switch(direction) {
+                case LEFT:
+                    currentSprite = spritesCoord + SNAKE_BODY + 1;
+                    break;
+                case UP:
+                    currentSprite = spritesCoord + SNAKE_TURN + UP + 1;
+                    break;
+                case DOWN:
+                    currentSprite = spritesCoord + SNAKE_TURN + 1;
+                    break;
+            }
+            break;
+    }
+    SDL_Rect pos ={.w = SPRITE_WIDTH, .h = SPRITE_HEIGHT,.x = last.x * SPRITE_WIDTH, .y = last.y * SPRITE_HEIGHT};
+    SDL_BlitSurface(background,&pos,screen,&pos);
+    SDL_BlitSurface(sprites,currentSprite,screen,&pos);
+    pos.x = next.x * SPRITE_WIDTH;
+    pos.y = next.y * SPRITE_HEIGHT;
+    SDL_BlitSurface(background,&pos,screen,&pos);
+    SDL_BlitSurface(sprites,spritesCoord + SNAKE_HEAD + direction,screen,&pos);
 }
 
 // stop the process until a key is pressed or the exit cross clicked

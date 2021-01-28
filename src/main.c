@@ -1,7 +1,7 @@
 #include "../headers/linker.h"
 
-#define FRAMERATE 10 // max framerate | default : 10 | disabled if set to 0 or commented
-// #define FRAMECOUNTER // output framerate if defined
+// #define FRAMERATE 10 // max framerate | default : 10 | disabled if set to 0 or commented
+#define FRAMECOUNTER // output framerate if defined
 
 // globals variables
 pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
         checkSurface(background,SDL_TRUE);
         SDL_FillRect(background,NULL,SDL_MapRGB(background->format,DEFAULTBACKGROUNDCOLOR));
     }
-    SDL_Rect* spritesCoord = creatSnakeCoord(); // create Rect for every sprite in the surface sprites
+    SDL_Rect* spritesCoord = createSnakeCoord(); // create Rect for every sprite in the surface sprites
     SDL_bool continuerMain = SDL_TRUE; // loop as long as true
     int map[NB_CASE_WIDTH][NB_CASE_HEIGHT];
     Coord last, head; // store the coord of the head and the end of the snake
@@ -67,8 +67,11 @@ int main(int argc, char const *argv[])
     uint nbReset = 0;
     #endif
 
+    // render map elements such as walls
+    renderMap(map,screen,sprites,spritesCoord);
+
     // target and score creation
-    createTarget(map);
+    createTarget(map,screen,sprites,spritesCoord);
     int score = 0;
 
 
@@ -98,10 +101,10 @@ int main(int argc, char const *argv[])
             // score incrementation when fruit is eaten
             score++;
             fprintf(stderr,"score : %d\n",score);
-            createTarget(map);
+            createTarget(map,screen,sprites,spritesCoord);
         } else {
             // move the end of the snake
-            updateLastCoord(map,&last);
+            renderSnakeEnd(map,screen,sprites,spritesCoord,background,&last);
             // collision checks
             if(map[head.x][head.y] & SNAKE_MASK || map[head.x][head.y] == WALL){
                 // pauseGame();
@@ -111,13 +114,8 @@ int main(int argc, char const *argv[])
         }
         // map update
         map[head.x][head.y] = SNAKE_MASK;
-        // screen reset
-        SDL_BlitSurface(background,NULL,screen,NULL);
-        // SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,DEFAULTBACKGROUNDCOLOR));
-        // re-render map elements
-        renderMap(map,screen,sprites,spritesCoord);
-        // re-render the snake
-        renderSnake(map,last,sprites,spritesCoord,screen);
+        //render the head
+        renderSnakeHead(map,screen,sprites,spritesCoord,background,last,head);
         // display the screen
         SDL_Flip(screen);
         // force cap the framerate
