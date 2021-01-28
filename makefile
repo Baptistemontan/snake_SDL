@@ -15,9 +15,12 @@
 # $* Pour le nom du fichier, mais sans son suffixe.
 
 FOL = build
+WFOL = Wbuild
 CFOL = src
 EXEC = snake
+WEXEC = snake
 CC = gcc
+WCC = x86_64-w64-mingw32-gcc
 CFLAGS=-O3 #Option d'optimisation du programme
 SDLFLAG = `sdl-config --cflags --libs`
 FLAGS = -lSDL_image -lpthread
@@ -42,3 +45,15 @@ clean :
 
 rmproper :
 	rm -r $(FOL)
+
+windows : $(WFOL) $(WFOL)/$(WEXEC)
+
+$(WFOL) :
+	mkdir $(WFOL)
+
+$(WFOL)/$(WEXEC) : $(OBJ)
+	$(WCC) $(CFLAGS) -o $@ $^ $(SDLFLAG) $(FLAGS)
+
+$(WFOL)/%.o : $(CFOL)/%.c
+	$(WCC) $(CFLAGS) -o $@ -c $< $(SDLFLAG) $(FLAGS)
+
