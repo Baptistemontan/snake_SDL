@@ -24,8 +24,9 @@ WCC = x86_64-w64-mingw32-gcc
 CFLAGS=-O3 #Option d'optimisation du programme
 SDLFLAG = `sdl-config --cflags --libs`
 FLAGS = -lSDL_image -lpthread
-SRC= $(CFOL)/main.c $(CFOL)/fonctions.c
-OBJ= $(FOL)/main.o $(FOL)/fonctions.o
+SRC= $(CFOL)/main.c $(CFOL)/fonctions.c $(CFOL)/render.c $(CFOL)/files.c
+OBJ= $(FOL)/main.o $(FOL)/fonctions.o $(FOL)/render.o $(FOL)/files.o
+WOBJ= $(WFOL)/main.o $(WFOL)/fonctions.o $(WFOL)/render.o $(WFOL)/files.o
 
 
 all : $(FOL) $(FOL)/$(EXEC)
@@ -51,7 +52,7 @@ windows : $(WFOL) $(WFOL)/$(WEXEC)
 $(WFOL) :
 	mkdir $(WFOL)
 
-$(WFOL)/$(WEXEC) : $(OBJ)
+$(WFOL)/$(WEXEC) : $(WOBJ)
 	$(WCC) $(CFLAGS) -o $@ $^ $(SDLFLAG) $(FLAGS)
 
 $(WFOL)/%.o : $(CFOL)/%.c

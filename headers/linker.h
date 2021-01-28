@@ -11,5 +11,7 @@
 
     #include "define.h"
     #include "fonctions.h"
+    #include "files.h"
+    #include "render.h"
 
 #endif
