@@ -60,8 +60,7 @@ int main(int argc, char const *argv[])
 
 
     // basic framerate counter part 1/2
-    // struct timespec time, newTime;
-    // clock_gettime(0,&time);
+    // uint32_t oldTime = SDL_GetTicks(), newTime;
     // int frame = 0;
 
     // target and score creation
@@ -117,15 +116,15 @@ int main(int argc, char const *argv[])
         // display the screen
         SDL_Flip(screen);
         // force cap the framerate
-        sleep(1000 / FRAMERATE);
+        SDL_Delay(1000 / FRAMERATE);
 
         // basic framerate counter part 2/2
         // frame++;
-        // clock_gettime(0,&newTime);
-        // if(time.tv_sec + 1 <= newTime.tv_sec) {
+        // newTime = SDL_GetTicks();
+        // if(newTime - oldTime >= 1000) {
+        //     oldTime = newTime;
         //     fprintf(stderr,"%d\n",frame);
         //     frame = 0;
-        //     time = newTime;
         // }
     }
     // force termination of the event thread

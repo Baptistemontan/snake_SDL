@@ -18,16 +18,6 @@
     #define SAVEFILENAME "map.lvl" // name of the lvl save map
     #define SAVEFILEPATH "./saves/%s" // path to the save folder
 
-
-    // sleep fonc macro
-    #ifdef __unix__
-    #include <unistd.h>
-    #define sleep(ms) usleep(ms * 1000)
-    #else
-    #include <windows.h>
-    #define sleep(ms) Sleep(ms)
-    #endif
-
     // mutex for the direction variable
     extern pthread_mutex_t directionMutex;
 
