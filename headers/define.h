@@ -14,9 +14,12 @@
     #define WINDOW_HEIGHT SPRITE_HEIGHT * NB_CASE_HEIGHT // window height in pxl
     #define MAX_PATH_LENGTH 100 // max size of the path buffer
     #define SPRITESPATH "sprites/%s" // path to the sprites folder
+    #define SPRITESNAME "snake.png"
+    #define BACKGROUNDNAME "background.png"
     #define ASCII_OFFSET '!' // ascii offset, can be 0 but the lvl file will be hard to modifie by hand
     #define SAVEFILENAME "map.lvl" // name of the lvl save map
     #define SAVEFILEPATH "./saves/%s" // path to the save folder
+    #define DEFAULTBACKGROUNDCOLOR 0x00,0x00,0x00 //RGB
 
     // mutex for the direction variable
     extern pthread_mutex_t directionMutex;

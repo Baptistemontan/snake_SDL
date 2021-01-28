@@ -4,8 +4,8 @@
     #include "linker.h"
 
     char* editPath(char* folderPath, char* fileName, char* buff);
-    SDL_Surface* loadSprite(char* name);
-    void checkSurface(SDL_Surface* surface);
+    SDL_Surface* loadSprite(char* name, SDL_bool check);
+    void checkSurface(SDL_Surface* surface,SDL_bool terminate);
     SDL_Rect* creatSnakeCoord();
     void newCoord(int direction, int* x, int* y);
     void updateLastCoord(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord *lastCoord);

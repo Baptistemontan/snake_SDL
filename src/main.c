@@ -8,14 +8,24 @@ pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
 int main(int argc, char const *argv[])
 {
     // SDL initialisation
-    SDL_Init(SDL_INIT_VIDEO);
+    if(SDL_Init(SDL_INIT_VIDEO) == -1) {
+        fprintf(stderr, "erreur initialisation SDL : %s\n",SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
 
     // rand functions init
     srand(time(NULL));
 
     // variable init and surfaces loading
     SDL_Surface *screen = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-    SDL_Surface* sprites = loadSprite("snake.png"); // load all the sprites at once
+    checkSurface(screen,SDL_TRUE);
+    SDL_Surface* sprites = loadSprite(SPRITESNAME,SDL_TRUE); // load all the sprites at once
+    SDL_Surface* background = loadSprite(BACKGROUNDNAME,SDL_FALSE); // load background sprite, does not exit if not found, but error will appear
+    if(background == NULL) {
+        background = SDL_CreateRGBSurface(SDL_HWSURFACE, WINDOW_WIDTH,WINDOW_HEIGHT,32,0,0,0,0);
+        checkSurface(background,SDL_TRUE);
+        SDL_FillRect(background,NULL,SDL_MapRGB(background->format,DEFAULTBACKGROUNDCOLOR));
+    }
     SDL_Rect* spritesCoord = creatSnakeCoord(); // create Rect for every sprite in the surface sprites
     SDL_bool continuerMain = SDL_TRUE; // loop as long as true
     int map[NB_CASE_WIDTH][NB_CASE_HEIGHT];
@@ -60,8 +70,8 @@ int main(int argc, char const *argv[])
 
 
     // basic framerate counter part 1/2
-    // uint32_t oldTime = SDL_GetTicks(), newTime;
-    // int frame = 0;
+    // Uint32 oldTime = SDL_GetTicks(), newTime;
+    // uint frame = 0;
 
     // target and score creation
     createTarget(map);
@@ -108,7 +118,8 @@ int main(int argc, char const *argv[])
         // map update
         map[head.x][head.y] = SNAKE_MASK;
         // screen reset
-        SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
+        SDL_BlitSurface(background,NULL,screen,NULL);
+        // SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,DEFAULTBACKGROUNDCOLOR));
         // re-render map elements
         renderMap(map,screen,sprites,spritesCoord);
         // re-render the snake
@@ -132,6 +143,7 @@ int main(int argc, char const *argv[])
     // variable freeing
     free(spritesCoord);
     SDL_FreeSurface(sprites);
+    SDL_FreeSurface(background);
     // end of programme
     SDL_Quit();
     return EXIT_SUCCESS;

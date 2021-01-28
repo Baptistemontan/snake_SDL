@@ -8,18 +8,18 @@ char* editPath(char* folderPath, char* fileName, char* buff) {
 
 // check if a surface as been succesfully loaded
 // print the error to stderr if not
-void checkSurface(SDL_Surface* surface) {
+void checkSurface(SDL_Surface* surface,SDL_bool terminate) {
     if(surface == NULL) {
         fprintf(stderr, "erreur surface: %s\n", SDL_GetError());
-        exit(EXIT_FAILURE);
+        if(terminate) exit(EXIT_FAILURE);
     }
 }
 
 // takes a filename in the sprites folder and return the SDL surfaces
-SDL_Surface* loadSprite(char* name) {
+SDL_Surface* loadSprite(char* name, SDL_bool check) {
     char pathBuff[MAX_PATH_LENGTH];
     SDL_Surface* sprite = IMG_Load(editPath(SPRITESPATH,name,pathBuff));
-    checkSurface(sprite);
+    checkSurface(sprite,check);
     return sprite;
 }
 
