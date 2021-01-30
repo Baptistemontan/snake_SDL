@@ -1,7 +1,7 @@
 #include "../headers/linker.h"
 
-// #define FRAMERATE 10 // max framerate | default : 10 | disabled if set to 0 or commented
-#define FRAMECOUNTER // output framerate if defined
+#define FRAMERATE 10 // max framerate | default : 10 | disabled if set to 0 or commented
+// #define FRAMECOUNTER // output framerate if defined
 
 // globals variables
 pthread_mutex_t directionMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -17,31 +17,39 @@ int main(int argc, char const *argv[])
     // rand functions init
     srand(time(NULL));
 
-    // variable init and surfaces loading
-    SDL_Surface *screen = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    const int nbCaseWidth = argc > ARG_NB_CASE_WIDTH ? initWidthHeight(argv[ARG_NB_CASE_WIDTH],0) : DEFAULT_NB_CASE_WIDTH;
+    const int nbCaseHeight = argc > ARG_NB_CASE_HEIGHT ? initWidthHeight(argv[ARG_NB_CASE_WIDTH],1) : DEFAULT_NB_CASE_HEIGHT;
+
+    // sprites loading
+    SDL_Surface* sprites = argc > ARG_SPRITES_FILE && strlen(argv[ARG_SPRITES_FILE]) > 0 ? loadSprite(argv[ARG_SPRITES_FILE],SDL_FALSE) : NULL; // load all the sprites at once
+    if(sprites == NULL) sprites = loadSprite(DEFAULTSPRITESNAME,SDL_TRUE);
+    //sprite cutting
+    SDL_Rect* spritesCoord = createSpritesCoord(sprites); // create Rect for every sprite in the surface sprites
+    // window creation
+    const int windowWidth = nbCaseWidth * spritesCoord->w, windowHeight = nbCaseHeight * spritesCoord->h;
+    SDL_Surface *screen = SDL_SetVideoMode(windowWidth, windowHeight, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
     checkSurface(screen,SDL_TRUE);
-    SDL_Surface* sprites = loadSprite(SPRITESNAME,SDL_TRUE); // load all the sprites at once
-    SDL_Surface* background = loadSprite(BACKGROUNDNAME,SDL_FALSE); // load background sprite, does not exit if not found, but error will appear
+    //background creation
+    SDL_Surface* background = argc > ARG_BACKGROUND_FILE && strlen(argv[ARG_BACKGROUND_FILE]) > 0 ? loadSprite(argv[ARG_BACKGROUND_FILE],SDL_FALSE) : NULL; // load all the sprites at once
+    if(background == NULL) background = loadSprite(BACKGROUNDNAME,SDL_FALSE);
     if(background == NULL) {
-        background = SDL_CreateRGBSurface(SDL_HWSURFACE, WINDOW_WIDTH,WINDOW_HEIGHT,32,0,0,0,0);
+        background = SDL_CreateRGBSurface(SDL_HWSURFACE,windowWidth,windowHeight,32,0,0,0,0);
         checkSurface(background,SDL_TRUE);
         SDL_FillRect(background,NULL,SDL_MapRGB(background->format,DEFAULTBACKGROUNDCOLOR));
     }
-    SDL_Rect* spritesCoord = createSnakeCoord(); // create Rect for every sprite in the surface sprites
+
+    // variable creation
     SDL_bool continuerMain = SDL_TRUE; // loop as long as true
-    int map[NB_CASE_WIDTH][NB_CASE_HEIGHT];
+    int map[nbCaseWidth][nbCaseHeight];
     Coord last, head; // store the coord of the head and the end of the snake
     int direction, newDirection; // current direction, newDirection is modified by the event thread
     
     // window caption
     SDL_WM_SetCaption("SNAKE", NULL);
 
-    //chargement du niveau
-    if(loadLevel(map,&last,&head,&direction) == SDL_FALSE) {
-        if(defaultLevel(map,&last,&head,&direction) == SDL_FALSE){
-            fprintf(stderr,"board size too small.\n");
-            exit(EXIT_FAILURE);
-        }
+    //level loading
+    if(argc < ARG_SAVE_FILE || strlen(argv[ARG_SAVE_FILE]) == 0 || loadLevel(nbCaseWidth,nbCaseHeight,map,&last,&head,&direction,argv[ARG_SAVE_FILE]) == SDL_FALSE) {
+        defaultLevel(nbCaseWidth,nbCaseHeight,map,&last,&head,&direction);
     }
     newDirection = direction;
 
@@ -68,12 +76,14 @@ int main(int argc, char const *argv[])
     #endif
 
     // render map elements such as walls
-    renderMap(map,screen,sprites,spritesCoord);
+    renderMap(nbCaseWidth,nbCaseHeight,map,screen,sprites,spritesCoord);
+    renderSnake(nbCaseWidth,nbCaseHeight,map,last,sprites,spritesCoord,screen);
 
     // target and score creation
-    createTarget(map,screen,sprites,spritesCoord);
+    createTarget(nbCaseWidth,nbCaseHeight,map,screen,sprites,spritesCoord);
     int score = 0;
 
+    SDL_Flip(screen);
 
     while(continuerMain) {
         // update direction from the event thread
@@ -96,15 +106,21 @@ int main(int argc, char const *argv[])
                 break;
         }
         // move the head according to the direction
-        newCoord(direction,&(head.x),&(head.y));
+        newCoord(nbCaseWidth,nbCaseHeight,direction,&(head.x),&(head.y));
+        #ifndef NOBOUNDARIES
+        if(head.x < 0 || head.y < 0 || head.x >= nbCaseWidth || head.y >= nbCaseHeight) {
+            continuerMain = SDL_FALSE;
+            break;
+        }
+        #endif
         if(map[head.x][head.y] == TARGET) {
             // score incrementation when fruit is eaten
             score++;
             fprintf(stderr,"score : %d\n",score);
-            createTarget(map,screen,sprites,spritesCoord);
+            createTarget(nbCaseWidth,nbCaseHeight,map,screen,sprites,spritesCoord);
         } else {
             // move the end of the snake
-            renderSnakeEnd(map,screen,sprites,spritesCoord,background,&last);
+            renderSnakeEnd(nbCaseWidth,nbCaseHeight,map,screen,sprites,spritesCoord,background,&last);
             // collision checks
             if(map[head.x][head.y] & SNAKE_MASK || map[head.x][head.y] == WALL){
                 // pauseGame();
@@ -115,7 +131,7 @@ int main(int argc, char const *argv[])
         // map update
         map[head.x][head.y] = SNAKE_MASK;
         //render the head
-        renderSnakeHead(map,screen,sprites,spritesCoord,background,last,head);
+        renderSnakeHead(nbCaseWidth,nbCaseHeight,map,screen,sprites,spritesCoord,background,last,head);
         // display the screen
         SDL_Flip(screen);
         // force cap the framerate

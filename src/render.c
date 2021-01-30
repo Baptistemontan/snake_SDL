@@ -2,7 +2,7 @@
 
 // render the snake according to the map
 // deprecated
-void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* screen) {
+void renderSnake(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight],Coord lastCoord, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* screen) {
     // variable declaration
     int lastDir,x = lastCoord.x,y = lastCoord.y;
     int currentCase = map[x][y];
@@ -24,10 +24,10 @@ void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Sur
         currentSurface = spritesCoord + SNAKE_END + RIGHT;
         lastDir = RIGHT;
     }
-    coord.x = x * SPRITE_WIDTH;
-    coord.y = y * SPRITE_WIDTH;
+    coord.x = x * spritesCoord->w;
+    coord.y = y * spritesCoord->w;
     // move the current coord according to the given direction
-    newCoord(lastDir,&x,&y);
+    newCoord(nbCaseWidth,nbCaseHeight,lastDir,&x,&y);
     currentCase = map[x][y];
     // render the end of the snake
     SDL_BlitSurface(sprites,currentSurface,screen,&coord);
@@ -92,25 +92,25 @@ void renderSnake(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord lastCoord, SDL_Sur
             currentSurface = spritesCoord + SNAKE_HEAD + lastDir;
             continuer = SDL_FALSE; // loop exit
         }
-        coord.x = x * SPRITE_WIDTH;
-        coord.y = y * SPRITE_WIDTH;
+        coord.x = x * spritesCoord->w;
+        coord.y = y * spritesCoord->h;
         // sprit rendering
         SDL_BlitSurface(sprites,currentSurface,screen,&coord);
         // current coord update
-        newCoord(lastDir,&x,&y);
+        newCoord(nbCaseWidth,nbCaseHeight,lastDir,&x,&y);
         currentCase = map[x][y];
     } 
 }
 
 // take a map and render every element other than the snake
-void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord) {
+void renderMap(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord) {
     SDL_Rect pos;
-    for(int i = 0; i < NB_CASE_WIDTH;i++) {
-        for(int j = 0; j < NB_CASE_HEIGHT;j++) {
+    for(int i = 0; i < nbCaseWidth;i++) {
+        for(int j = 0; j < nbCaseHeight;j++) {
             switch(map[i][j]) {
                 case WALL:
-                    pos.x = i * SPRITE_WIDTH;
-                    pos.y = j * SPRITE_HEIGHT;
+                    pos.x = i * spritesCoord->w;
+                    pos.y = j * spritesCoord->h;
                     SDL_BlitSurface(sprites,spritesCoord + SPRITE_WALL,screen,&pos);
                     break;
             }
@@ -118,10 +118,10 @@ void renderMap(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_
     }
 }
 
-void renderSnakeEnd(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* background, Coord* lastCoord) {
-    SDL_Rect pos ={.w = SPRITE_WIDTH, .h = SPRITE_HEIGHT,.x = lastCoord->x * SPRITE_WIDTH, .y = lastCoord->y * SPRITE_HEIGHT};
+void renderSnakeEnd(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* background, Coord* lastCoord) {
+    SDL_Rect pos ={.w = spritesCoord->w, .h = spritesCoord->h,.x = lastCoord->x * spritesCoord->w, .y = lastCoord->y * spritesCoord->h};
     SDL_BlitSurface(background,&pos,screen,&pos);
-    updateLastCoord(map,lastCoord);
+    updateLastCoord(nbCaseWidth,nbCaseHeight,map,lastCoord);
     SDL_Rect* newPos;
     if(map[lastCoord->x][lastCoord->y] & UP_MASK) {
         newPos = spritesCoord + SNAKE_END + UP;
@@ -132,13 +132,13 @@ void renderSnakeEnd(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen,
     } else { // RIGHT
         newPos = spritesCoord + SNAKE_END + RIGHT;
     }
-    pos.x = lastCoord->x * SPRITE_WIDTH;
-    pos.y = lastCoord->y * SPRITE_HEIGHT;
+    pos.x = lastCoord->x * spritesCoord->w;
+    pos.y = lastCoord->y * spritesCoord->h;
     SDL_BlitSurface(background,&pos,screen,&pos);
     SDL_BlitSurface(sprites,newPos,screen,&pos);
 }
 
-void renderSnakeHead(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* background, Coord lastCoord, Coord headCoord) {
+void renderSnakeHead(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight], SDL_Surface* screen, SDL_Surface* sprites, SDL_Rect* spritesCoord, SDL_Surface* background, Coord lastCoord, Coord headCoord) {
     Coord last, next = lastCoord;
     int direction, lastDir;
     while(next.x != headCoord.x || next.y != headCoord.y) {
@@ -153,7 +153,7 @@ void renderSnakeHead(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen
         } else { // RIGHT
             direction = RIGHT;
         }
-        newCoord(direction,&(next.x),&(next.y));
+        newCoord(nbCaseWidth,nbCaseHeight,direction,&(next.x),&(next.y));
     }
     SDL_Rect* currentSprite;
     switch(lastDir) {
@@ -210,11 +210,11 @@ void renderSnakeHead(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], SDL_Surface* screen
             }
             break;
     }
-    SDL_Rect pos ={.w = SPRITE_WIDTH, .h = SPRITE_HEIGHT,.x = last.x * SPRITE_WIDTH, .y = last.y * SPRITE_HEIGHT};
+    SDL_Rect pos ={.w = spritesCoord->w, .h = spritesCoord->h,.x = last.x * spritesCoord->w, .y = last.y * spritesCoord->h};
     SDL_BlitSurface(background,&pos,screen,&pos);
     SDL_BlitSurface(sprites,currentSprite,screen,&pos);
-    pos.x = next.x * SPRITE_WIDTH;
-    pos.y = next.y * SPRITE_HEIGHT;
+    pos.x = next.x * spritesCoord->w;
+    pos.y = next.y * spritesCoord->h;
     SDL_BlitSurface(background,&pos,screen,&pos);
     SDL_BlitSurface(sprites,spritesCoord + SNAKE_HEAD + direction,screen,&pos);
 }

@@ -2,15 +2,17 @@
 
 // return an array of Rect going from left to right, up to down, of every sprite of a given size in a given space
 // array is malloced
-SDL_Rect* createSnakeCoord() {
+SDL_Rect* createSpritesCoord(SDL_Surface* sprites) {
+    int width = sprites->w / NB_BASESPRITE_WIDTH;
+    int height = sprites->h / NB_BASESPRITE_HEIGHT;
     SDL_Rect *spritesCoord = malloc(sizeof(SDL_Rect) * NB_SPRITES);
     int k = 0;
     for(int i = 0;i < NB_BASESPRITE_HEIGHT; i++) {
         for(int j = 0; j < NB_BASESPRITE_WIDTH; j++) {
-            spritesCoord[k].y = i * SPRITE_HEIGHT;
-            spritesCoord[k].x = j * SPRITE_WIDTH;
-            spritesCoord[k].w = SPRITE_WIDTH;
-            spritesCoord[k].h = SPRITE_HEIGHT;
+            spritesCoord[k].x = j * width;
+            spritesCoord[k].y = i * height;
+            spritesCoord[k].w = width;
+            spritesCoord[k].h = height;
             k++;
         }
     }
@@ -19,38 +21,46 @@ SDL_Rect* createSnakeCoord() {
 
 // increment x or y with the given direction
 // if x or y go outside boundaries, loop to the other side
-void newCoord(int direction, int* x, int* y) {
+void newCoord(int nbCaseWidth, int nbCaseHeight,int direction, int* x, int* y) {
     switch(direction) {
         case UP:
             (*y)--;
-            if(*y < 0) *y = NB_CASE_HEIGHT - 1;
+            #ifdef NOBOUNDARIES
+            if(*y < 0) *y = nbCaseHeight - 1;
+            #endif
             break;
         case DOWN:
             (*y)++;
-            if(*y == NB_CASE_HEIGHT) *y = 0;
+            #ifdef NOBOUNDARIES
+            if(*y == nbCaseHeight) *y = 0;
+            #endif
             break;
         case RIGHT:
             (*x)++;
-            if(*x == NB_CASE_WIDTH) *x = 0;
+            #ifdef NOBOUNDARIES
+            if(*x == nbCaseWidth) *x = 0;
+            #endif
             break;
         case LEFT:
             (*x)--;
-            if(*x < 0) *x = NB_CASE_WIDTH - 1;
+            #ifdef NOBOUNDARIES
+            if(*x < 0) *x = nbCaseWidth - 1;
+            #endif
             break; 
     }
 }
 
 // update end of snake coord and update the maps
-void updateLastCoord(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord *lastCoord) {
+void updateLastCoord(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight],Coord *lastCoord) {
     int x = lastCoord->x, y = lastCoord->y;
     if(map[x][y] & UP_MASK) {
-        newCoord(UP,&x,&y);
+        newCoord(nbCaseWidth,nbCaseHeight,UP,&x,&y);
     } else if (map[x][y] & DOWN_MASK) {
-        newCoord(DOWN,&x,&y);
+        newCoord(nbCaseWidth,nbCaseHeight,DOWN,&x,&y);
     } else if(map[x][y] & RIGHT_MASK) {
-        newCoord(RIGHT,&x,&y);
+        newCoord(nbCaseWidth,nbCaseHeight,RIGHT,&x,&y);
     } else { // LEFT
-        newCoord(LEFT,&x,&y);
+        newCoord(nbCaseWidth,nbCaseHeight,LEFT,&x,&y);
     }
     map[lastCoord->x][lastCoord->y] = EMPTY;
     lastCoord->x = x;
@@ -111,14 +121,14 @@ void* waitEvent(void* arg) {
 }
 
 // pick a random empty location and put the target in
-void createTarget(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],SDL_Surface* screen,SDL_Surface* sprites, SDL_Rect* spritesCoord) {
+void createTarget(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight],SDL_Surface* screen,SDL_Surface* sprites, SDL_Rect* spritesCoord) {
     int x,y;
     do {
-        x = rand() % NB_CASE_WIDTH;
-        y = rand() % NB_CASE_HEIGHT;
+        x = rand() % nbCaseWidth;
+        y = rand() % nbCaseHeight;
     } while(map[x][y] != 0);
     map[x][y] = TARGET;
-    SDL_Rect pos = {.x = x * SPRITE_WIDTH, .y = y * SPRITE_HEIGHT};
+    SDL_Rect pos = {.x = x * spritesCoord->w, .y = y * spritesCoord->h};
     SDL_BlitSurface(sprites,spritesCoord + SPRITE_TARGET,screen,&pos);
 }
 
@@ -140,17 +150,14 @@ SDL_bool pauseGame() {
     }
 }
 
-SDL_bool defaultLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* head, int* direction) {
-    if(NB_CASE_HEIGHT < 3 || NB_BASESPRITE_WIDTH < 3){
-        return SDL_FALSE;
-    }
+void defaultLevel(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight],Coord* lastCoord, Coord* head, int* direction) {
     fprintf(stderr,"creating default level...\n");
-    for(int i = 0; i < NB_CASE_WIDTH;i++) {
-        for(int j = 0; j < NB_CASE_HEIGHT; j++) {
+    for(int i = 0; i < nbCaseWidth;i++) {
+        for(int j = 0; j < nbCaseHeight; j++) {
             map[i][j] = EMPTY;
         }
     }
-    Coord middle = {.x = NB_CASE_WIDTH / 2, .y = NB_BASESPRITE_HEIGHT / 2};
+    Coord middle = {.x = nbCaseWidth / 2, .y = nbCaseHeight / 2};
     lastCoord->x = middle.x;
     lastCoord->y = middle.y + 1;
     head->x = middle.x;
@@ -159,5 +166,12 @@ SDL_bool defaultLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, C
     map[lastCoord->x][lastCoord->y] = SNAKE_MASK | UP_MASK;
     map[middle.x][middle.y] = SNAKE_MASK | UP_MASK;
     map[head->x][head->y] = SNAKE_MASK;
-    return SDL_TRUE;
+}
+
+int initWidthHeight(const char* number,int width) {
+    int num = atoi(number);
+    if(num < 3) {
+        return width ? DEFAULT_NB_CASE_WIDTH : DEFAULT_NB_CASE_HEIGHT;
+    }
+    return num;
 }

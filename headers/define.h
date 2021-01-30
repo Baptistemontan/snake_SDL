@@ -3,27 +3,21 @@
 
     #include "linker.h"
 
-    #define SPRITE_WIDTH 40 // width of a sprite bloc in pxl
-    #define SPRITE_HEIGHT 40 // height of a sprite bloc in pxl
-    #define SPRITESNAME "snake.png"
-    // #define SPRITE_WIDTH 64 //40 // width of a sprite bloc in pxl
-    // #define SPRITE_HEIGHT 64 //40 // height of a sprite bloc in pxl
-    // #define SPRITESNAME "snake_2.png"
+    // #define SPRITESNAME "snake.png"
+    #define DEFAULTSPRITESNAME "snake_2.png"
 
     #define NB_BASESPRITE_WIDTH 4 // nb of sprite in a row of the base sprite image
     #define NB_BASESPRITE_HEIGHT 4 // nb of sprite in a coll of the base sprite image
     #define NB_SPRITES NB_BASESPRITE_HEIGHT * NB_BASESPRITE_WIDTH // total number of sprites
-    #define NB_CASE_WIDTH 12 // NB of case in a row of the window | min 3
-    #define NB_CASE_HEIGHT 12 // NB of case in a col of the window | min 3
-    #define WINDOW_WIDTH SPRITE_WIDTH * NB_CASE_WIDTH // window width in pxl
-    #define WINDOW_HEIGHT SPRITE_HEIGHT * NB_CASE_HEIGHT // window height in pxl
+    #define DEFAULT_NB_CASE_WIDTH 12 // NB of case in a row of the window | min 3
+    #define DEFAULT_NB_CASE_HEIGHT 12 // NB of case in a col of the window | min 3
     #define MAX_PATH_LENGTH 100 // max size of the path buffer
     #define SPRITESPATH "sprites/%s" // path to the sprites folder
     #define BACKGROUNDNAME "background.png"
     #define ASCII_OFFSET '!' // ascii offset, can be 0 but the lvl file will be hard to modifie by hand
-    #define SAVEFILENAME "map.lvl" // name of the lvl save map
     #define SAVEFILEPATH "./saves/%s" // path to the save folder
     #define DEFAULTBACKGROUNDCOLOR 0x00,0x00,0x00 //RGB
+    #define NOBOUNDARIES // if defined, if the snake go to the boundaries, it loop back to the other side
 
     // mutex for the direction variable
     extern pthread_mutex_t directionMutex;
@@ -57,6 +51,15 @@
         SNAKE_BODY          = 3 * NB_BASESPRITE_WIDTH,
         SPRITE_TARGET       = SNAKE_BODY + 2,
         SPRITE_WALL         = SPRITE_TARGET + 1
+    };
+
+    // argv arguments enum
+    enum {
+        ARG_NB_CASE_WIDTH = 1,
+        ARG_NB_CASE_HEIGHT,
+        ARG_SPRITES_FILE,
+        ARG_BACKGROUND_FILE,
+        ARG_SAVE_FILE
     };
 
     // store coords

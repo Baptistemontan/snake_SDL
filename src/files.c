@@ -1,7 +1,7 @@
 #include "../headers/linker.h"
 
 // add a filename to a path and store it in a buffer, return the buffer
-char* editPath(char* folderPath, char* fileName, char* buff) {
+char* editPath(char* folderPath, const char* fileName, char* buff) {
     sprintf(buff,folderPath,fileName);
     return buff;
 }
@@ -16,7 +16,7 @@ void checkSurface(SDL_Surface* surface,SDL_bool terminate) {
 }
 
 // takes a filename in the sprites folder and return the SDL surfaces
-SDL_Surface* loadSprite(char* name, SDL_bool check) {
+SDL_Surface* loadSprite(const char* name, SDL_bool check) {
     char pathBuff[MAX_PATH_LENGTH];
     SDL_Surface* sprite = IMG_Load(editPath(SPRITESPATH,name,pathBuff));
     checkSurface(sprite,check);
@@ -24,30 +24,30 @@ SDL_Surface* loadSprite(char* name, SDL_bool check) {
 }
 
 // save the level
-void saveLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], Coord lastCoord, Coord head, int direction) {
+void saveLevel(int nbCaseWidth, int nbCaseHeight, int map[nbCaseWidth][nbCaseHeight], Coord lastCoord, Coord head, int direction,const char* saveFileName) {
     // does everything as loadLevel but write instead of reading
     char pathBuff[MAX_PATH_LENGTH];
     // save file openings
-    FILE* file = fopen(editPath(SAVEFILEPATH,SAVEFILENAME,pathBuff),"w+");
+    FILE* file = fopen(editPath(SAVEFILEPATH,saveFileName,pathBuff),"w+");
     // error checking
     if(file == NULL) {
-        fprintf(stderr,"erreur ouverture %s",SAVEFILENAME);
+        fprintf(stderr,"erreur ouverture %s",pathBuff);
         exit(EXIT_FAILURE);
     }
     fprintf(stderr,"saving level...\n");
     // char order is same as loadLevel
-    fputc(NB_CASE_WIDTH + ASCII_OFFSET,file);
-    fputc(NB_CASE_HEIGHT + ASCII_OFFSET,file);
+    fputc(nbCaseWidth + ASCII_OFFSET,file);
+    fputc(nbCaseHeight + ASCII_OFFSET,file);
     fputc(lastCoord.x + ASCII_OFFSET,file);
     fputc(lastCoord.y + ASCII_OFFSET,file);
     fputc(head.x + ASCII_OFFSET,file);
     fputc(head.y + ASCII_OFFSET,file);
     fputc(direction + ASCII_OFFSET,file);
     int i = 0, j = 0;
-    while(i < NB_CASE_WIDTH) {
+    while(i < nbCaseWidth) {
         fputc(map[i][j] + ASCII_OFFSET,file);
         j++;
-        if(j == NB_CASE_HEIGHT) {
+        if(j == nbCaseHeight) {
             j = 0;
             i++;
         }
@@ -56,10 +56,10 @@ void saveLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT], Coord lastCoord, Coord he
 }
 
 // load the level
-SDL_bool loadLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coord* head, int* direction) {
+SDL_bool loadLevel(int nbCaseWidth, int nbCaseHeight,int map[nbCaseWidth][nbCaseHeight],Coord* lastCoord, Coord* head, int* direction,const char* saveFileName) {
     char pathBuff[MAX_PATH_LENGTH];
     // save file loading
-    FILE* file = fopen(editPath(SAVEFILEPATH,SAVEFILENAME,pathBuff),"r");
+    FILE* file = fopen(editPath(SAVEFILEPATH,saveFileName,pathBuff),"r");
     // check for error
     if(file == NULL) {
         fprintf(stderr,"erreur ouverture %s, using default level.\n",pathBuff);
@@ -69,7 +69,7 @@ SDL_bool loadLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coor
     // first 2 char are the map dimension
     int width = fgetc(file) - ASCII_OFFSET;
     int height = fgetc(file) - ASCII_OFFSET;
-    if(width != NB_CASE_WIDTH || height != NB_CASE_HEIGHT) {
+    if(width != nbCaseWidth || height != nbCaseHeight) {
         fprintf(stderr,"save file dimension are not compatible : %d x %d required.\n",width,height);
         fprintf(stderr,"using default level.\n");
         fclose(file);
@@ -85,10 +85,10 @@ SDL_bool loadLevel(int map[NB_CASE_WIDTH][NB_CASE_HEIGHT],Coord* lastCoord, Coor
     *direction = fgetc(file) - ASCII_OFFSET;
     // the each char goes from left to right, top to bottom
     int i = 0, j = 0;
-    while(i < NB_CASE_WIDTH) {
+    while(i < nbCaseWidth) {
         map[i][j] = fgetc(file) - ASCII_OFFSET;
         j++;
-        if(j == NB_CASE_HEIGHT) {
+        if(j == nbCaseHeight) {
             j = 0;
             i++;
         }
